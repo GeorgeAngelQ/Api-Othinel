@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\customerController;
+use App\Models\Customer;
+Route::get('/customer',[customerController::class, 'list']);
+Route::get('/customer/{id}', [customerController::class, 'show']);
+Route::post('/customer', [customerController::class, 'store']);
+Route::put('/customer/{id}', [customerController::class, 'update']);
+Route::patch('/customer/{id}', [customerController::class, 'partialUpdate']);
+Route::delete('/customer/{id}', [customerController::class, 'destroy']);
+
+Route::get('/vendor',[customerController::class, 'list']);
+Route::get('/vendor/{id}', [customerController::class, 'show']);
+Route::post('/vendor', [customerController::class, 'store']);
+Route::put('/vendor/{id}', [customerController::class, 'update']);
+Route::patch('/vendor/{id}', [customerController::class, 'partialUpdate']);
+Route::delete('/vendor/{id}', [customerController::class, 'destroy']);
+
+Route::get('/product',[customerController::class, 'list']);
+Route::get('/product/{id}', [customerController::class, 'show']);
+Route::post('/product', [customerController::class, 'store']);
+Route::put('/product/{id}', [customerController::class, 'update']);
+Route::patch('/product/{id}', [customerController::class, 'partialUpdate']);
+Route::delete('/product/{id}', [customerController::class, 'destroy']);
