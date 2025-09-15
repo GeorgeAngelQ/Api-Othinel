@@ -2,43 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Venta;
 use App\Models\Pago;
 use App\Services\CulqiService;
-use App\Services\CulquiService;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PagoController extends Controller
 {
-    public function iniciarPago(Request $request, CulquiService $culqiService)
+    protected $culqi;
+
+    public function __construct(CulqiService $culqi)
     {
-        $validated = $request->validate([
-            'RefVentaId'     => 'required|exists:venta,numFac',
-            'id_metodo_pago' => 'required|exists:metodo_pago,id',
+        $this->culqi = $culqi;
+    }
+
+    public function iniciarPago(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'numFac'        => 'required|exists:ventas,numFac',
+            'id_metodo_pago' => 'required|in:1,2', // 1 = Culqi, 2 = CoinGate (ejemplo)
         ]);
 
-        $venta = Venta::findOrFail($validated['RefVentaId']);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $venta = Venta::with('cliente')->find($request->numFac);
 
         $pago = Pago::create([
-            'RefVentaId'     => $venta->numFac,
-            'id_metodo_pago' => $validated['id_metodo_pago'],
-            'monto'          => $venta->total,
-            'moneda'         => 'PEN',
-            'estado'         => 'pendiente',
-            'fecha'          => now(),
+            'RefVentaId'    => $venta->numFac,
+            'id_metodo_pago'=> $request->id_metodo_pago,
+            'estado'        => 'pending'
         ]);
 
-        if ($pago->id_metodo_pago == 1) {
-            $orden = $culqiService->crearOrden($venta, $pago);
+        if ($request->id_metodo_pago == 1) {
+            $data = $this->culqi->crearOrden($venta, $pago);
+
             return response()->json([
                 'message' => 'Orden creada en Culqi',
-                'orden'   => $orden
-            ]);
+                'order'   => $data
+            ], 201);
         }
 
-        if ($pago->id_metodo_pago == 2) {
-        }
-
-        return response()->json(['message' => 'Método de pago no implementado aún'], 400);
+        // Si es CoinGate u otro método
+        return response()->json([
+            'message' => 'Método de pago aún no implementado'
+        ], 400);
     }
 }
