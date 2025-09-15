@@ -2,8 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VentaController;
+use App\Http\Controllers\PagoController;
+use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\customerController;
-use App\Models\Customer;
+
 Route::get('/customer',[customerController::class, 'list']);
 Route::get('/customer/{id}', [customerController::class, 'show']);
 Route::post('/customer', [customerController::class, 'store']);
@@ -24,3 +27,13 @@ Route::post('/product', [customerController::class, 'store']);
 Route::put('/product/{id}', [customerController::class, 'update']);
 Route::patch('/product/{id}', [customerController::class, 'partialUpdate']);
 Route::delete('/product/{id}', [customerController::class, 'destroy']);
+
+
+Route::get('ventas', [VentaController::class, 'index']);
+Route::post('ventas', [VentaController::class, 'store']);
+Route::get('ventas/{numFac}', [VentaController::class, 'show']);
+
+Route::post('pagos', [PagoController::class, 'iniciarPago']);
+
+Route::post('webhook/culqi', [WebhookController::class, 'culqi']);
+Route::post('webhook/coingate', [WebhookController::class, 'coingate']);
