@@ -41,7 +41,7 @@ class customerController extends Controller
     public function store(Request $request){
         $validator = Validator::make($request->all(),[
             'nombre' => 'required|max:50',
-            'RUC_DNI' => 'required|max:15',
+            'ruc_dni' => 'required|max:15',
             'telefono' => 'required|max:15',
             'correo' => 'required|email|max:100',
             'direccion' => 'required|max:150'
@@ -58,7 +58,7 @@ class customerController extends Controller
 
         $customer = Customer::create([
             'nombre' => $request->nombre,
-            'RUC_DNI' => $request->RUC_DNI,
+            'ruc_dni' => $request->ruc_dni,
             'telefono' => $request->telefono,
             'correo' => $request->correo,
             'direccion' => $request->direccion
@@ -94,7 +94,7 @@ class customerController extends Controller
 
         $validator = Validator::make($request->all(),[
             'nombre' => 'required|max:50',
-            'RUC_DNI' => 'required|max:15',
+            'ruc_dni' => 'required|max:15',
             'telefono' => 'required|max:15',
             'correo' => 'required|email|max:100',
             'direccion' => 'required|max:150'
@@ -110,7 +110,7 @@ class customerController extends Controller
         }
 
         $customer->nombre = $request->nombre;
-        $customer->RUC_DNI = $request->RUC_DNI;
+        $customer->ruc_dni = $request->ruc_dni;
         $customer->telefono = $request->telefono;
         $customer->correo = $request->correo;
         $customer->direccion = $request->direccion;
@@ -140,7 +140,7 @@ class customerController extends Controller
 
         $validator = Validator::make($request->all(),[
             'nombre' => 'max:50',
-            'RUC_DNI' => 'max:15',
+            'ruc_dni' => 'max:15',
             'telefono' => 'max:15',
             'correo' => 'email|max:100',
             'direccion' => 'max:150'
@@ -158,8 +158,8 @@ class customerController extends Controller
         if($request->has('nombre')){
             $customer->nombre = $request->nombre;
         }
-        if($request->has('RUC_DNI')){
-            $customer->RUC_DNI = $request->RUC_DNI;
+        if($request->has('ruc_dni')){
+            $customer->ruc_dni = $request->ruc_dni;
         }
         if($request->has('telefono')){
             $customer->telefono = $request->telefono;
@@ -199,4 +199,11 @@ class customerController extends Controller
         ];
         return response()->json($data,200);
     }
+
+
+    public function index()
+    {
+        return Customer::all();
+    }
+
 }

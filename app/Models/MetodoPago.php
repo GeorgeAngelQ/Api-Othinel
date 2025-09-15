@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Customer extends Model
+class MetodoPago extends Model
 {
     use HasFactory;
 
-    protected $table = 'cliente';
+    protected $table = 'metodo_pago';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
@@ -17,15 +17,17 @@ class Customer extends Model
 
     protected $fillable = [
         'nombre',
-        'ruc_dni',
-        'telefono',
-        'correo',
-        'direccion',
+        'descripcion',
+        'activo',
     ];
 
-    public function ventas()
+    public function pagos()
     {
-        return $this->hasMany(Venta::class, 'RefClienteId', 'id');
+        return $this->hasMany(Pago::class, 'id_metodo_pago', 'id');
+    }
+
+    public function ordenes()
+    {
+        return $this->hasMany(OrdenPago::class, 'id_metodo_pago', 'id');
     }
 }
-
