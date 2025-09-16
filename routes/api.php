@@ -35,5 +35,15 @@ Route::get('ventas/{numFac}', [VentaController::class, 'show']);
 
 Route::post('pagos', [PagoController::class, 'iniciarPago']);
 
+Route::get('pagos/iniciar/{ventaId}', [PagoController::class, 'iniciarPago'])->name('pagos.iniciar');
+
+
 Route::post('webhook/culqi', [WebhookController::class, 'culqi']);
 Route::post('webhook/coingate', [WebhookController::class, 'coingate']);
+
+
+Route::get('/pagos/success', [PagoController::class, 'success'])->name('pagos.success');
+Route::get('/pagos/failure', [PagoController::class, 'failure'])->name('pagos.failure');
+Route::get('/pagos/pending', [PagoController::class, 'pending'])->name('pagos.pending');
+
+Route::post('/pagos/notification', [PagoController::class, 'notification'])->name('pagos.notification');

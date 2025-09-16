@@ -21,7 +21,7 @@ class Pago extends Model
         'monto',
         'moneda',
         'estado',
-        'transaction_id',   
+        'transaction_id',
         'detalle_respuesta',
         'fecha'
     ];

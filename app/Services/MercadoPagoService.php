@@ -5,114 +5,91 @@ namespace App\Services;
 use MercadoPago\MercadoPagoConfig;
 use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\Exceptions\MPApiException;
+use Illuminate\Support\Facades\Log;
 
 class MercadoPagoService
 {
-    public function crearOrden()
+    public function crearOrden($venta, $pago)
     {
         try {
+            // Configurar el access token
             MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
 
-            $data = [
-                "back_urls" => array(
-                    "success" => "https://test.com/success",
-                    "failure" => "https://test.com/failure",
-                    "pending" => "https://test.com/pending"
-                ),
-                "differential_pricing" => array(
-                    "id" => 1,
-                ),
-                "expires" => false,
-                "items" => array(
-                    array(
-                        "id" => "1234",
-                        "title" => "Dummy Title",
-                        "description" => "Dummy description",
-                        "picture_url" => "https://www.myapp.com/myimage.jpg",
-                        "category_id" => "car_electronics",
-                        "quantity" => 2,
-                        "currency_id" => "BRL",
-                        "unit_price" => 100
-                    )
-                ),
-                "marketplace_fee" => 0,
-                "payer" => array(
-                    "name" => "Test",
-                    "surname" => "User",
-                    "email" => "your_test_email@example.com",
-                    "phone" => array(
-                        "area_code" => "11",
-                        "number" => "4444-4444"
-                    ),
-                    "identification" => array(
-                        "type" => "CPF",
-                        "number" => "19119119100"
-                    ),
-                    "address" => array(
-                        "zip_code" => "06233200",
-                        "street_name" => "Street",
-                        "street_number" => "123"
-                    )
-                ),
-                "additional_info" => "Discount: 12.00",
-                "auto_return" => "all",
-                "binary_mode" => true,
-                "external_reference" => "1643827245",
-                "marketplace" => "none",
-                "notification_url" => "https://notificationurl.com",
-                "operation_type" => "regular_payment",
-                "payment_methods" => array(
-                    "default_payment_method_id" => "master",
-                    "excluded_payment_types" => array(
-                        array(
-                            "id" => "visa"
-                        )
-                    ),
-                    "excluded_payment_methods" => array(
-                        array(
-                            "id" => ""
-                        )
-                    ),
-                    "installments" => 5,
-                    "default_installments" => 1
-                ),
-                "shipments" >= array(
-                    "mode" => "custom",
-                    "local_pickup" => false,
-                    "default_shipping_method" => null,
-                    "free_methods" => array(
-                        array(
-                            "id" => 1
-                        )
-                    ),
-                    "cost" => 10,
-                    "free_shipping" => false,
-                    "dimensions" => "10x10x20,500",
-                    "receiver_address" => array(
-                        "zip_code" => "06000000",
-                        "street_number" => "123",
-                        "street_name" => "Street",
-                        "floor" => "12",
-                        "apartment" => "120A",
-                        "city_name" => "Rio de Janeiro",
-                        "state_name" => "Rio de Janeiro",
-                        "country_name" => "Brasil"
-                    )
-                ),
-                "statement_descriptor" => "Test Store",
+            // Generar items desde los detalles de la venta
+            $items = $venta->detalles->map(function ($detalle) {
+                if (!$detalle->producto) {
+                    Log::warning("Detalle sin producto:", ['detalle_id' => $detalle->id, 'RefProductoID' => $detalle->RefProductoID]);
+                    return null;
+                }
+
+                $unit_price = $detalle->cantidad > 0 ? $detalle->subtotal / $detalle->cantidad : 0;
+
+                return [
+                    "id" => $detalle->RefProductoID,
+                    "title" => $detalle->producto->nombre ?? 'Producto sin nombre',
+                    "description" => ($detalle->producto->talla ?? ''). ' ' .($detalle->producto->color ?? ''),
+                    "picture_url" => $detalle->producto->imagen_url ?? '',
+                    "category_id" => $detalle->producto->categoria_id ?? null,
+                    "quantity" => $detalle->cantidad ?? 1,
+                    "currency_id" => "PEN",
+                    "unit_price" => $unit_price
+                ];
+            })->filter()->values()->toArray();
+
+            // Datos del comprador
+            $payer = [
+                "name" => $venta->cliente->nombre ?? 'Cliente',
+                "surname" => $venta->cliente->apellido ?? '',
+                "email" => $venta->cliente->correo ?? 'test@example.com',
+                "phone" => [
+                    "area_code" => $venta->cliente->area_code ?? '+51',
+                    "number" => $venta->cliente->telefono ?? ''
+                ],
+                "identification" => [
+                    "type" => $venta->cliente->documento ?? 'RUC O DNI',
+                    "number" => $venta->cliente->ruc_dni ?? ''
+                ],
+                "address" => [
+                    "zip_code" => $venta->cliente->direccion ?? '',
+                    "street_name" => $venta->cliente->direccion ?? '',
+                    "street_number" => $venta->cliente->direccion ?? ''
+                ]
             ];
 
+            $data = [
+                "items" => $items,
+                "payer" => $payer,
+                "back_urls" => [
+                    "success" => "https://mi-tunel.ngrok.io/pagos/success",
+                    "failure" => "https://mi-tunel.ngrok.io/pagos/failure",
+                    "pending" => "https://mi-tunel.ngrok.io/pagos/pending"
+                ],
+                "auto_return" => "approved",
+                "external_reference" => $venta->numFac,
+                "notification_url" => "https://mi-tunel.ngrok.io/pagos/notification"
+            ];
+
+            // Log completo para debug
+            Log::info('Datos enviados a Mercado Pago:', $data);
+
+            // Crear preferencia
             $client = new PreferenceClient();
             $preference = $client->create($data);
 
+            Log::info('Respuesta Mercado Pago:', (array) $preference);
+
             return $preference;
         } catch (MPApiException $e) {
-            // ✅ Devuelve el JSON real de la API
+            Log::error('Error Mercado Pago API:', ['api_response' => $e->getApiResponse()]);
             return [
                 'message' => 'Error al crear preferencia en Mercado Pago',
                 'api_response' => $e->getApiResponse()
             ];
         } catch (\Exception $e) {
+            Log::error('Error inesperado Mercado Pago:', [
+                'error_message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return [
                 'message' => 'Error inesperado',
                 'error_message' => $e->getMessage(),
