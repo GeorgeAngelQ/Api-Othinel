@@ -18,16 +18,12 @@ class PagoController extends Controller
 
     public function iniciarPago($ventaId)
     {
-        // Cargar la venta con cliente y detalles de productos
         $venta = Venta::with(['cliente', 'detalles.producto'])->findOrFail($ventaId);
 
-        // Obtener el pago asociado (si existe)
         $pago = Pago::where('RefVentaId', $ventaId)->first();
 
-        // Crear preferencia en Mercado Pago
         $preference = $this->mercadopago->crearOrden($venta, $pago);
 
-        // Manejar errores
         if (is_array($preference) && isset($preference['message'])) {
             return response()->json($preference, 500);
         }
@@ -39,27 +35,5 @@ class PagoController extends Controller
             'response_data' => $preference
         ]);
     }
-
-
-
-    public function success()
-{
-    return view('pagos.success'); 
-}
-
-public function failure()
-{
-    return view('pagos.failure');
-}
-
-public function pending()
-{
-    return view('pagos.pending');
-}
-
-public function notification(Request $request)
-{
-    return response()->json(['status' => 'ok']);
-}
 
 }

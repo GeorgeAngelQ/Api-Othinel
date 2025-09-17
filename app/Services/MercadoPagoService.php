@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Log;
 
 class MercadoPagoService
 {
-    public function crearOrden($venta, $pago)
+    public function crearOrden($venta)
     {
         try {
-            // Configurar el access token
-            MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
-
-            // Generar items desde los detalles de la venta
+            $token = MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
+            Log::info($token);
             $items = $venta->detalles->map(function ($detalle) {
                 if (!$detalle->producto) {
                     Log::warning("Detalle sin producto:", ['detalle_id' => $detalle->id, 'RefProductoID' => $detalle->RefProductoID]);
@@ -36,7 +34,6 @@ class MercadoPagoService
                 ];
             })->filter()->values()->toArray();
 
-            // Datos del comprador
             $payer = [
                 "name" => $venta->cliente->nombre ?? 'Cliente',
                 "surname" => $venta->cliente->apellido ?? '',
@@ -69,14 +66,8 @@ class MercadoPagoService
                 "notification_url" => "https://mi-tunel.ngrok.io/pagos/notification"
             ];
 
-            // Log completo para debug
-            Log::info('Datos enviados a Mercado Pago:', $data);
-
-            // Crear preferencia
             $client = new PreferenceClient();
             $preference = $client->create($data);
-
-            Log::info('Respuesta Mercado Pago:', (array) $preference);
 
             return $preference;
         } catch (MPApiException $e) {
