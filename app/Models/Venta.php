@@ -19,5 +19,9 @@ class Venta extends Model
     {
         return $this->hasMany(VentaDetalle::class, 'RefVentaId', 'numFac');
     }
-}
 
+    public function pagos()
+    {
+        return $this->hasMany(Pago::class, 'RefVentaId', 'numFac');
+    }
+}

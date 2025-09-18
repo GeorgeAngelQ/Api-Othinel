@@ -35,5 +35,33 @@ class PagoController extends Controller
             'response_data' => $preference
         ]);
     }
+    public function list(){
+        $pago = Pago::all();
+        if($pago->isEmpty()){
+            $data = [
+                'message' => 'There are no payments',
+                'status' => 200
+            ];
+            return response()->json($data,200);
+        }
+        return response()->json($pago,200);
+    }
 
+    public function show($id){
+        $payment = Pago::find($id);
+
+        if(!$payment){
+            $data = [
+                'message' => 'Payment not found',
+                'status' => '404'
+            ];
+            return response()->json($data,404);
+        }
+
+        $data = [
+            'payment' => $payment,
+            'status' => 200
+        ];
+        return response()->json($data,200);
+    }
 }

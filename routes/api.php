@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\VentaController;
+use App\Http\Controllers\ventaController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\customerController;
@@ -29,9 +29,9 @@ Route::patch('/product/{id}', [customerController::class, 'partialUpdate']);
 Route::delete('/product/{id}', [customerController::class, 'destroy']);
 
 
-Route::get('ventas', [VentaController::class, 'index']);
-Route::post('ventas', [VentaController::class, 'store']);
-Route::get('ventas/{numFac}', [VentaController::class, 'show']);
+Route::get('ventas', [ventaController::class, 'index']);
+Route::post('ventas', [ventaController::class, 'store']);
+Route::get('ventas/{numFac}', [ventaController::class, 'show']);
 
 Route::post('pagos', [PagoController::class, 'iniciarPago']);
 
