@@ -36,7 +36,7 @@ class PagoController extends Controller
         ]);
     }
     public function list(){
-        $pago = Pago::all();
+        $pago = Pago::with('venta')->get();
         if($pago->isEmpty()){
             $data = [
                 'message' => 'There are no payments',
@@ -48,7 +48,7 @@ class PagoController extends Controller
     }
 
     public function show($id){
-        $payment = Pago::find($id);
+        $payment = Pago::with('venta')->findOrFail($id);
 
         if(!$payment){
             $data = [

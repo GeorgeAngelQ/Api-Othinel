@@ -14,4 +14,8 @@ class VentaDetalle extends Model
     {
         return $this->belongsTo(Producto::class, 'RefProductoID', 'id');
     }
+    public function venta()
+    {
+        return $this->belongsTo(Venta::class, 'RefVentaId','numFac');
+    }
 }

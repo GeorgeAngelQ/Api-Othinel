@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use app\Models\Producto;
+use App\Models\Producto;
 
 class ProductController extends Controller
 {
@@ -27,7 +27,7 @@ class ProductController extends Controller
 
         if (!$product) {
             $data = [
-                'message' => 'product not found',
+                'message' => 'Product not found',
                 'status' => '404'
             ];
             return response()->json($data, 404);

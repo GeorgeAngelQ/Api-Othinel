@@ -25,9 +25,4 @@ class MetodoPago extends Model
     {
         return $this->hasMany(Pago::class, 'id_metodo_pago', 'id');
     }
-
-    public function ordenes()
-    {
-        return $this->hasMany(OrdenPago::class, 'id_metodo_pago', 'id');
-    }
 }
