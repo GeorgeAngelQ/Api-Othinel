@@ -43,7 +43,7 @@ Route::get('/ventadetalle/{RefVentaId}', [VentaDetalleController::class, 'show']
 
 Route::get('/pagos', [PagoController::class, 'list']);
 Route::get('/pagos/{id}',[PagoController::class, 'show']);
-Route::post('/pagos', [PagoController::class, 'iniciarPago']);
+Route::post('/pagos/{ventaId}', [PagoController::class, 'iniciarPago']);
 
 Route::get('/pagos/iniciar/{ventaId}', [PagoController::class, 'iniciarPago'])->name('pagos.iniciar');
 

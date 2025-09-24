@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Validator;
-use App\Models\Venta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+
+use App\Models\Venta;
+use App\Models\VentaDetalle;
 
 class VentaController extends Controller
 {
@@ -44,39 +47,62 @@ class VentaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'RefClienteId' => 'required|exists:cliente,id',
-            'montoTotal' => 'required|decimal:2',
-            'igv' => 'required|decimal:2',
-            'total' => 'required|decimal:1,2',
+            'montoTotal'   => 'required|decimal:2',
+            'igv'          => 'required|decimal:2',
+            'total'        => 'required|decimal:1,2',
+            'detalles'     => 'required|array',
+            'detalles.*.RefProductoId' => 'required|exists:producto,id',
+            'detalles.*.cantidad'      => 'required|integer|min:1',
+            'detalles.*.subtotal'      => 'required|decimal:1,2',
         ]);
 
         if ($validator->fails()) {
-            $data = [
+            return response()->json([
                 'message' => 'Data validation error',
-                'error' => $validator->errors(),
-                'status' => 400
-            ];
-            return response()->json($data, 400);
+                'error'   => $validator->errors(),
+                'status'  => 400
+            ], 400);
         }
 
-        $sale = Venta::create([
-            'tipo' => $request->tipo,
-            'nombre' => $request->nombre,
-            'talla' => $request->talla,
-            'color' => $request->color,
-            'precioVenta' => $request->precioVenta,
-            'stock' => $request->stock
-        ]);
+        try {
+            DB::beginTransaction();
 
-        if (!$sale) {
-            $data = [
-                'message' => 'Error to create sale',
-                'status' => 500
-            ];
-            return response()->json($data, 500);
+            // Crear la venta
+            $venta = Venta::create([
+                'RefClienteId' => $request->RefClienteId,
+                'fecha'        => now(),
+                'montoTotal'   => $request->montoTotal,
+                'igv'          => $request->igv,
+                'total'        => $request->total,
+            ]);
+
+            foreach ($request->detalles as $detalle) {
+                VentaDetalle::create([
+                    'RefVentaId'    => $venta->id,
+                    'RefProductoId' => $detalle['RefProductoId'],
+                    'cantidad'      => $detalle['cantidad'],
+                    'subtotal'      => $detalle['subtotal'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Venta creada correctamente',
+                'venta'   => $venta->load('detalles'),
+                'status'  => 201
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al crear la venta',
+                'error'   => $e->getMessage(),
+                'status'  => 500
+            ], 500);
         }
-
-        return response()->json($sale, 201);
     }
+
     public function destroy($numFac)
     {
         $sale = Venta::find($numFac);
